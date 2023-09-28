@@ -13,7 +13,6 @@
 
 char basepath[] = "./serve/";
 
-
 void generateResp(char* respbuf, char uri[], char method[]) {
     // atm, assuming that all calls are get calls 
     printf("Called generateResp\n");   
@@ -21,8 +20,31 @@ void generateResp(char* respbuf, char uri[], char method[]) {
 
     char* fbuf = malloc(8192 * sizeof(char));
     int status = readall(strcat(ibp, uri+1), fbuf);
+    char conttype[20];
+    FileType ft = getFiletype(uri);
+    switch (ft) {
+        case TEXT:
+            strcpy(conttype, "text/plain");
+            break;
+        case HTML:
+            strcpy(conttype, "text/html");
+            break;
+        case CSS:
+            strcpy(conttype, "text/css");
+            break;
+        case JS:
+            strcpy(conttype, "text/javascript");
+            break;
+    }
 
-    sprintf(respbuf, "HTTP/1.0 %d OK\r\nServer: cweb\r\nContent-type: text/html\r\n\r\n%s", status, fbuf);
+    switch (status) {
+        case 404:
+            sprintf(respbuf, "HTTP/1.0 %d Not Found\r\nServer: cweb\r\nContent-type: %s\r\n\r\n<html>404 Not Found. Keep Looking!</html>", status, conttype);
+        case 500:
+            sprintf(respbuf, "HTTP/1.0 %d Internal Server Error\r\nServer: cweb\r\nContent-type: %s\r\n\r\n<html><h1>500 Internal Server Error</h1></html>", status, conttype);    
+    }
+
+    sprintf(respbuf, "HTTP/1.0 %d OK\r\nServer: cweb\r\nContent-type: %s\r\n\r\n%s", status, conttype, fbuf);
     printf("Resp Status = %d\n", status);
 }
 
@@ -87,8 +109,10 @@ int main(void) {
 
         // Read the request
         char method[BUFSIZE], uri[BUFSIZE], version[BUFSIZE];
-        strcpy(uri, "/main.html");
         sscanf(buffer, "%s %s %s", method, uri, version);
+        if (!strcmp(uri, "/")) {
+            strcpy(uri, "/main.html");
+        }
         printf("[%s:%u] %s %s %s\n", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port), method, version, uri);
         // write to socket
         printf("calling generateResp\n");

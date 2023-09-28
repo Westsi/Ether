@@ -1,5 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include "filehandle.h"
+#include <string.h>
 
 // returns status code, allocs buffer, does not free - caller needs to do that
 int readall(char path[], char* buffer) {
@@ -41,4 +43,16 @@ int readall(char path[], char* buffer) {
     // printf("The file called test.dat contains this text\n\n%s", buffer);
     
     return 200;
+}
+
+FileType getFiletype(char uri[]) {
+    char* last = strrchr(uri, '.')+1;
+    FileType ft;
+    if (!strcmp(last, "css")) {
+            ft=CSS;
+    } else if (!strcmp(last, "html")) {ft=HTML;}
+    else if (!strcmp(last, "js")) {ft=JS;}
+    else {ft=TEXT;}
+    return ft;
+
 }
