@@ -8,13 +8,14 @@
 #include "cweberror.h"
 #include "filehandle.h"
 #include "cweblog.h"
+#include <time.h>
 
 #define PORT 8080
 #define BUFSIZE 1024
 
 char basepath[] = "./serve/";
 
-void generateResp(char* respbuf, char uri[], char method[], char requestinfo[]) {
+void generateResp(char* respbuf, char uri[], char method[], char requestinfo[], time_t starttime) {
     // atm, assuming that all calls are get calls 
     // printf("Called generateResp\n");   
     char ibp[strlen(basepath)+strlen(uri)-1]; strcpy(ibp, basepath);
@@ -49,7 +50,13 @@ void generateResp(char* respbuf, char uri[], char method[], char requestinfo[]) 
             sprintf(respbuf, "HTTP/1.0 %d Internal Server Error\r\nServer: cweb\r\nContent-type: %s\r\n\r\n<html><h1>500 Internal Server Error</h1></html>", status, conttype);    
             break;
     }
-    handledreq(status, requestinfo);
+    time_t now;
+    time(&now);
+    double diff;
+    diff = difftime(now, starttime);
+    char ftime[80];
+    sprintf(&ftime, "%10.8lfs", diff);
+    handledreq(status, requestinfo, ftime);
 }
 
 int main(void) {
@@ -91,6 +98,10 @@ int main(void) {
     for (;;) {
         // accept incoming connections
         int newsockfd = accept(sockfd, (struct sockaddr *)&host_addr, (socklen_t *)&host_addrlen);
+
+        time_t starttime;
+        time(&starttime);
+
         if (newsockfd < 0) {
             perror("cweb (accept)");
             return 1;
@@ -123,7 +134,7 @@ int main(void) {
         // write to socket
         // printf("calling generateResp\n");
         char* _resp = malloc(8192 * sizeof(char));
-        generateResp(_resp, uri, method, reqdata);
+        generateResp(_resp, uri, method, reqdata, starttime);
         // printf("writing resp\n");
         int valwrite = write(newsockfd, _resp, strlen(_resp));
         if (valwrite < 0) {
