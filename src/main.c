@@ -4,10 +4,27 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <string.h>
+#include <stdlib.h>
 #include "cweberror.h"
+#include "filehandle.h"
 
 #define PORT 8080
 #define BUFSIZE 1024
+
+char basepath[] = "./serve/";
+
+
+void generateResp(char* respbuf, char uri[], char method[]) {
+    // atm, assuming that all calls are get calls 
+    printf("Called generateResp\n");   
+    char ibp[strlen(basepath)+strlen(uri)-1]; strcpy(ibp, basepath);
+
+    char* fbuf = malloc(8192 * sizeof(char));
+    int status = readall(strcat(ibp, uri+1), fbuf);
+
+    sprintf(respbuf, "HTTP/1.0 %d OK\r\nServer: cweb\r\nContent-type: text/html\r\n\r\n%s", status, fbuf);
+    printf("Resp Status = %d\n", status);
+}
 
 int main(void) {
     char buffer[BUFSIZE];
@@ -70,15 +87,20 @@ int main(void) {
 
         // Read the request
         char method[BUFSIZE], uri[BUFSIZE], version[BUFSIZE];
+        strcpy(uri, "/main.html");
         sscanf(buffer, "%s %s %s", method, uri, version);
         printf("[%s:%u] %s %s %s\n", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port), method, version, uri);
-
         // write to socket
-        int valwrite = write(newsockfd, resp, strlen(resp));
+        printf("calling generateResp\n");
+        char* _resp = malloc(8192 * sizeof(char));
+        generateResp(_resp, uri, method);
+        printf("writing resp\n");
+        int valwrite = write(newsockfd, _resp, strlen(_resp));
         if (valwrite < 0) {
             perror("cweb (write)");
             continue;
         }
+        free(_resp);
         close(newsockfd);
     }
     return 0;
