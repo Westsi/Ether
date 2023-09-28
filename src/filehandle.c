@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "filehandle.h"
+#include "cweblog.h"
 #include <string.h>
 
 // returns status code, allocs buffer, does not free - caller needs to do that
@@ -9,7 +10,7 @@ int readall(char path[], char* buffer) {
     // char    *buffer;
     long    numbytes;
 
-    printf("Reading from %s\n", path);
+    // printf("Reading from %s\n", path);
     
     /* open an existing file for reading */
     infile = fopen(path, "r");

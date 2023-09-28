@@ -7,15 +7,16 @@
 #include <stdlib.h>
 #include "cweberror.h"
 #include "filehandle.h"
+#include "cweblog.h"
 
 #define PORT 8080
 #define BUFSIZE 1024
 
 char basepath[] = "./serve/";
 
-void generateResp(char* respbuf, char uri[], char method[]) {
+void generateResp(char* respbuf, char uri[], char method[], char requestinfo[]) {
     // atm, assuming that all calls are get calls 
-    printf("Called generateResp\n");   
+    // printf("Called generateResp\n");   
     char ibp[strlen(basepath)+strlen(uri)-1]; strcpy(ibp, basepath);
 
     char* fbuf = malloc(8192 * sizeof(char));
@@ -38,14 +39,17 @@ void generateResp(char* respbuf, char uri[], char method[]) {
     }
 
     switch (status) {
+        case 200:
+            sprintf(respbuf, "HTTP/1.0 %d OK\r\nServer: cweb\r\nContent-type: %s\r\n\r\n%s", status, conttype, fbuf);
+            break;
         case 404:
             sprintf(respbuf, "HTTP/1.0 %d Not Found\r\nServer: cweb\r\nContent-type: %s\r\n\r\n<html>404 Not Found. Keep Looking!</html>", status, conttype);
+            break;
         case 500:
             sprintf(respbuf, "HTTP/1.0 %d Internal Server Error\r\nServer: cweb\r\nContent-type: %s\r\n\r\n<html><h1>500 Internal Server Error</h1></html>", status, conttype);    
+            break;
     }
-
-    sprintf(respbuf, "HTTP/1.0 %d OK\r\nServer: cweb\r\nContent-type: %s\r\n\r\n%s", status, conttype, fbuf);
-    printf("Resp Status = %d\n", status);
+    handledreq(status, requestinfo);
 }
 
 int main(void) {
@@ -91,7 +95,7 @@ int main(void) {
             perror("cweb (accept)");
             return 1;
         }
-        printf("connection accepted");
+        // printf("connection accepted\n");
 
         // get client details
         int sockn = getsockname(newsockfd, (struct sockaddr *)&client_addr, (socklen_t *)&client_addrlen);
@@ -113,12 +117,14 @@ int main(void) {
         if (!strcmp(uri, "/")) {
             strcpy(uri, "/main.html");
         }
-        printf("[%s:%u] %s %s %s\n", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port), method, version, uri);
+        char reqdata[1024];
+        // sprintf(reqdata, "[%s:%u] %s %s %s\n", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port), method, version, uri);
+        sprintf(reqdata, "%s | %s | %s\n", inet_ntoa(client_addr.sin_addr), method, uri);
         // write to socket
-        printf("calling generateResp\n");
+        // printf("calling generateResp\n");
         char* _resp = malloc(8192 * sizeof(char));
-        generateResp(_resp, uri, method);
-        printf("writing resp\n");
+        generateResp(_resp, uri, method, reqdata);
+        // printf("writing resp\n");
         int valwrite = write(newsockfd, _resp, strlen(_resp));
         if (valwrite < 0) {
             perror("cweb (write)");
