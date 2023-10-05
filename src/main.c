@@ -44,10 +44,10 @@ int generateResp(char* respbuf, char uri[], char method[]) {
             sprintf(respbuf, "HTTP/1.0 %d OK\r\nServer: cweb\r\nContent-type: %s\r\n\r\n%s", status, conttype, fbuf);
             break;
         case 404:
-            sprintf(respbuf, "HTTP/1.0 %d Not Found\r\nServer: cweb\r\nContent-type: %s\r\n\r\n<html>404 Not Found. Keep Looking!</html>", status, conttype);
+            sprintf(respbuf, "HTTP/1.0 %d Not Found\r\nServer: cweb\r\nContent-type: text/html\r\n\r\n<html>404 Not Found. Keep Looking!</html>", status);
             break;
         case 500:
-            sprintf(respbuf, "HTTP/1.0 %d Internal Server Error\r\nServer: cweb\r\nContent-type: %s\r\n\r\n<html><h1>500 Internal Server Error</h1></html>", status, conttype);    
+            sprintf(respbuf, "HTTP/1.0 %d Internal Server Error\r\nServer: cweb\r\nContent-type: text/html\r\n\r\n<html><h1>500 Internal Server Error</h1></html>", status);    
             break;
     }
 

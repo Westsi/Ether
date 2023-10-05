@@ -4,3 +4,8 @@ h1 {
 body {
     background-color: grey;
 }
+
+button {
+    background-color: aquamarine;
+    color: white;
+}
