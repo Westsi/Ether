@@ -15,7 +15,7 @@
 
 char basepath[] = "./serve/";
 
-void generateResp(char* respbuf, char uri[], char method[], char requestinfo[], time_t starttime) {
+int generateResp(char* respbuf, char uri[], char method[]) {
     // atm, assuming that all calls are get calls 
     // printf("Called generateResp\n");   
     char ibp[strlen(basepath)+strlen(uri)-1]; strcpy(ibp, basepath);
@@ -50,13 +50,8 @@ void generateResp(char* respbuf, char uri[], char method[], char requestinfo[], 
             sprintf(respbuf, "HTTP/1.0 %d Internal Server Error\r\nServer: cweb\r\nContent-type: %s\r\n\r\n<html><h1>500 Internal Server Error</h1></html>", status, conttype);    
             break;
     }
-    time_t now;
-    time(&now);
-    double diff;
-    diff = difftime(now, starttime);
-    char ftime[80];
-    sprintf(&ftime, "%10.8lfs", diff);
-    handledreq(status, requestinfo, ftime);
+
+    return status;
 }
 
 int main(void) {
@@ -99,8 +94,8 @@ int main(void) {
         // accept incoming connections
         int newsockfd = accept(sockfd, (struct sockaddr *)&host_addr, (socklen_t *)&host_addrlen);
 
-        time_t starttime;
-        time(&starttime);
+        struct timespec starttime;
+        timespec_get(&starttime, TIME_UTC);
 
         if (newsockfd < 0) {
             perror("cweb (accept)");
@@ -134,13 +129,24 @@ int main(void) {
         // write to socket
         // printf("calling generateResp\n");
         char* _resp = malloc(8192 * sizeof(char));
-        generateResp(_resp, uri, method, reqdata, starttime);
+        int status = generateResp(_resp, uri, method);
         // printf("writing resp\n");
         int valwrite = write(newsockfd, _resp, strlen(_resp));
         if (valwrite < 0) {
             perror("cweb (write)");
             continue;
         }
+
+        // sleep(1);
+        struct timespec now;
+        timespec_get(&now, TIME_UTC);
+        int diff;
+        diff = gmtime(&now.tv_sec)->tm_sec - gmtime(&starttime.tv_sec)->tm_sec;
+        // diff += now.tv_nsec - starttime.tv_nsec;
+        char ftime[80];
+        sprintf(&ftime, "%d.%09lds", diff, now.tv_nsec-starttime.tv_nsec);
+        handledreq(status, reqdata, ftime);
+        
         free(_resp);
         close(newsockfd);
     }
