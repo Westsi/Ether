@@ -1,1 +1,1 @@
-# cweb
+# Ether - Web Server written in C
