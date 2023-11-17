@@ -21,6 +21,7 @@ int generateResp(char* respbuf, char uri[], char method[]) {
     char ibp[strlen(basepath)+strlen(uri)-1]; strcpy(ibp, basepath);
 
     char* fbuf = malloc(8192 * sizeof(char));
+    memset(fbuf, 0, 8192); // this seems to be necessary unfortunately
     int status = readall(strcat(ibp, uri+1), fbuf);
     char conttype[20];
     FileType ft = getFiletype(uri);
@@ -51,15 +52,17 @@ int generateResp(char* respbuf, char uri[], char method[]) {
             break;
     }
 
+    free(fbuf);
+
     return status;
 }
 
 int main(void) {
     char buffer[BUFSIZE];
-    char resp[] = "HTTP/1.0 200 OK\r\n"
-                  "Server: cweb\r\n"
-                  "Content-type: text/html\r\n\r\n"
-                  "<html>hello, world</html>\r\n";
+    // char resp[] = "HTTP/1.0 200 OK\r\n"
+    //               "Server: cweb\r\n"
+    //               "Content-type: text/html\r\n\r\n"
+    //               "<html>hello, world</html>\r\n";
     int sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd == -1) {
         perror("cweb (socket)");

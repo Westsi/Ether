@@ -41,7 +41,7 @@ int readall(char path[], char* buffer) {
     
     /* confirm we have read the file by
     outputing it to the console */
-    // printf("The file called test.dat contains this text\n\n%s", buffer);
+    // printf("The file contains this text\n\n%s", buffer);
     
     return 200;
 }
