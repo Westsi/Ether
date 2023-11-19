@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "filehandle.h"
-#include "cweblog.h"
+#include "etherlog.h"
 #include <string.h>
 
 // returns status code, allocs buffer, does not free - caller needs to do that

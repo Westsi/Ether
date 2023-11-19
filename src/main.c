@@ -5,9 +5,9 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
-#include "cweberror.h"
+#include "ethererror.h"
 #include "filehandle.h"
-#include "cweblog.h"
+#include "etherlog.h"
 #include <time.h>
 
 #define PORT 8080
@@ -42,13 +42,13 @@ int generateResp(char* respbuf, char uri[], char method[]) {
 
     switch (status) {
         case 200:
-            sprintf(respbuf, "HTTP/1.0 %d OK\r\nServer: cweb\r\nContent-type: %s\r\n\r\n%s", status, conttype, fbuf);
+            sprintf(respbuf, "HTTP/1.0 %d OK\r\nServer: ether\r\nContent-type: %s\r\n\r\n%s", status, conttype, fbuf);
             break;
         case 404:
-            sprintf(respbuf, "HTTP/1.0 %d Not Found\r\nServer: cweb\r\nContent-type: text/html\r\n\r\n<html>404 Not Found. Keep Looking!</html>", status);
+            sprintf(respbuf, "HTTP/1.0 %d Not Found\r\nServer: ether\r\nContent-type: text/html\r\n\r\n<html>404 Not Found. Keep Looking!</html>", status);
             break;
         case 500:
-            sprintf(respbuf, "HTTP/1.0 %d Internal Server Error\r\nServer: cweb\r\nContent-type: text/html\r\n\r\n<html><h1>500 Internal Server Error</h1></html>", status);    
+            sprintf(respbuf, "HTTP/1.0 %d Internal Server Error\r\nServer: ether\r\nContent-type: text/html\r\n\r\n<html><h1>500 Internal Server Error</h1></html>", status);    
             break;
     }
 
@@ -57,15 +57,17 @@ int generateResp(char* respbuf, char uri[], char method[]) {
     return status;
 }
 
+
+
 int main(void) {
     char buffer[BUFSIZE];
     // char resp[] = "HTTP/1.0 200 OK\r\n"
-    //               "Server: cweb\r\n"
+    //               "Server: ether\r\n"
     //               "Content-type: text/html\r\n\r\n"
     //               "<html>hello, world</html>\r\n";
     int sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd == -1) {
-        perror("cweb (socket)");
+        perror("ether (socket)");
         return -1;
     }
     printf("socket created\n");
@@ -82,13 +84,13 @@ int main(void) {
 
     // bind socket to address
     if (bind(sockfd, (struct sockaddr *)&host_addr, host_addrlen) != 0) {
-        perror("cweb (bind)");
+        perror("ether (bind)");
         return -1;
     }
     printf("socket bound to address\n");
 
     if (listen(sockfd, SOMAXCONN) != 0) {
-        perror("cweb (listen)");
+        perror("ether (listen)");
         return -1;
     }
     printf("listening for connections...\n");
@@ -101,7 +103,7 @@ int main(void) {
         timespec_get(&starttime, TIME_UTC);
 
         if (newsockfd < 0) {
-            perror("cweb (accept)");
+            perror("ether (accept)");
             return 1;
         }
         // printf("connection accepted\n");
@@ -109,14 +111,14 @@ int main(void) {
         // get client details
         int sockn = getsockname(newsockfd, (struct sockaddr *)&client_addr, (socklen_t *)&client_addrlen);
         if (sockn < 0) {
-            perror("cweb (getsockname)");
+            perror("ether (getsockname)");
             continue;
         }
 
         // read from socket
         int valread = read(newsockfd, buffer, BUFSIZE);
         if (valread < 0) {
-            perror("cweb (read)");
+            perror("ether (read)");
             continue;
         }
 
@@ -136,7 +138,7 @@ int main(void) {
         // printf("writing resp\n");
         int valwrite = write(newsockfd, _resp, strlen(_resp));
         if (valwrite < 0) {
-            perror("cweb (write)");
+            perror("ether (write)");
             continue;
         }
 

@@ -1,5 +1,5 @@
-#ifndef CWEB_FILEHANDLE_H_
-#define CWEB_FILEHANDLE_H_
+#ifndef ETHER_FILEHANDLE_H_
+#define ETHER_FILEHANDLE_H_
 
 typedef enum {
     TEXT,
