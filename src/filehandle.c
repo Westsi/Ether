@@ -46,14 +46,33 @@ int readall(char path[], char* buffer) {
     return 200;
 }
 
-FileType getFiletype(char uri[]) {
+mime_map mime_types [] = {
+    {"css", "text/css"},
+    {"gif", "image/gif"},
+    {"htm", "text/html"},
+    {"html", "text/html"},
+    {"jpeg", "image/jpeg"},
+    {"jpg", "image/jpeg"},
+    {"ico", "image/x-icon"},
+    {"js", "application/javascript"},
+    {"pdf", "application/pdf"},
+    {"mp4", "video/mp4"},
+    {"png", "image/png"},
+    {"svg", "image/svg+xml"},
+    {"xml", "text/xml"},
+    {NULL, NULL},
+};
+
+void getFiletype(char conttype[], char uri[]) {
     char* last = strrchr(uri, '.')+1;
-    FileType ft;
-    if (!strcmp(last, "css")) {
-            ft=CSS;
-    } else if (!strcmp(last, "html")) {ft=HTML;}
-    else if (!strcmp(last, "js")) {ft=JS;}
-    else {ft=TEXT;}
-    return ft;
+    mime_map *map = mime_types;
+    while (map->extension) {
+        if (strcmp(map->extension, last) == 0) {
+            strcpy(conttype, map->mime_type);
+            return;
+        }
+        map++;
+    }
+    strcpy(conttype, "text/plain");
 
 }

@@ -9,6 +9,7 @@
 #include "filehandle.h"
 #include "etherlog.h"
 #include <time.h>
+#include "structs.h"
 
 #define PORT 8080
 #define BUFSIZE 1024
@@ -24,21 +25,7 @@ int generateResp(char* respbuf, char uri[], char method[]) {
     memset(fbuf, 0, 8192); // this seems to be necessary unfortunately
     int status = readall(strcat(ibp, uri+1), fbuf);
     char conttype[20];
-    FileType ft = getFiletype(uri);
-    switch (ft) {
-        case TEXT:
-            strcpy(conttype, "text/plain");
-            break;
-        case HTML:
-            strcpy(conttype, "text/html");
-            break;
-        case CSS:
-            strcpy(conttype, "text/css");
-            break;
-        case JS:
-            strcpy(conttype, "text/javascript");
-            break;
-    }
+    getFiletype(conttype, uri);
 
     switch (status) {
         case 200:
@@ -57,18 +44,12 @@ int generateResp(char* respbuf, char uri[], char method[]) {
     return status;
 }
 
-
-
-int main(void) {
-    char buffer[BUFSIZE];
-    // char resp[] = "HTTP/1.0 200 OK\r\n"
-    //               "Server: ether\r\n"
-    //               "Content-type: text/html\r\n\r\n"
-    //               "<html>hello, world</html>\r\n";
+ether_config_t init_ether_server() {
+    ether_config_t config;
     int sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd == -1) {
         perror("ether (socket)");
-        return -1;
+        exit(-1);
     }
     printf("socket created\n");
 
@@ -78,18 +59,26 @@ int main(void) {
     host_addr.sin_port = htons(PORT);
     host_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
+    config.sockfd = sockfd;
+    config.host_addr = host_addr;
+    config.host_addrlen = host_addrlen;
+    return config;
+}
+
+int run_ether_server(ether_config_t config) {
+    char buffer[BUFSIZE];
     // Create client address
     struct sockaddr_in client_addr;
     int client_addrlen = sizeof(client_addr);
 
     // bind socket to address
-    if (bind(sockfd, (struct sockaddr *)&host_addr, host_addrlen) != 0) {
+    if (bind(config.sockfd, (struct sockaddr *)&config.host_addr, config.host_addrlen) != 0) {
         perror("ether (bind)");
         return -1;
     }
     printf("socket bound to address\n");
 
-    if (listen(sockfd, SOMAXCONN) != 0) {
+    if (listen(config.sockfd, SOMAXCONN) != 0) {
         perror("ether (listen)");
         return -1;
     }
@@ -97,7 +86,7 @@ int main(void) {
 
     for (;;) {
         // accept incoming connections
-        int newsockfd = accept(sockfd, (struct sockaddr *)&host_addr, (socklen_t *)&host_addrlen);
+        int newsockfd = accept(config.sockfd, (struct sockaddr *)&config.host_addr, (socklen_t *)&config.host_addrlen);
 
         struct timespec starttime;
         timespec_get(&starttime, TIME_UTC);
@@ -156,4 +145,18 @@ int main(void) {
         close(newsockfd);
     }
     return 0;
+}
+
+
+
+int main(void) {
+    // char resp[] = "HTTP/1.0 200 OK\r\n"
+    //               "Server: ether\r\n"
+    //               "Content-type: text/html\r\n\r\n"
+    //               "<html>hello, world</html>\r\n";
+    
+    ether_config_t config = init_ether_server();
+
+    int rval = run_ether_server(config);
+    return rval;
 }
