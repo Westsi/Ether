@@ -13,12 +13,7 @@
 #include "etherinit.h"
 
 
-int main(void) {
-    // char resp[] = "HTTP/1.0 200 OK\r\n"
-    //               "Server: ether\r\n"
-    //               "Content-type: text/html\r\n\r\n"
-    //               "<html>hello, world</html>\r\n";
-    
+int main(void) { 
     ether_config_t config = init_ether_server();
 
     int rval = run_ether_server(config);

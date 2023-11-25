@@ -4,7 +4,12 @@
 
 
 typedef struct EtherRequestContext {
-
+    int error;
+    char uri[1024];
+    char method[64];
+    char headers[1024][1024];
+    char request_ip[1024];
+    char version[64];
 } request_ctx_t;
 
 typedef struct EtherRouteInfo {

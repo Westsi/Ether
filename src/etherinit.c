@@ -1,5 +1,6 @@
 #include "etherinit.h"
 #include "etherlog.h"
+#include "filehandle.h"
 #include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -58,7 +59,6 @@ int generateResp(char* respbuf, char uri[], char method[]) {
 }
 
 int run_ether_server(ether_config_t config) {
-    char buffer[BUFSIZE];
     // Create client address
     struct sockaddr_in client_addr;
     int client_addrlen = sizeof(client_addr);
@@ -89,33 +89,21 @@ int run_ether_server(ether_config_t config) {
         }
         // printf("connection accepted\n");
 
-        // get client details
-        int sockn = getsockname(newsockfd, (struct sockaddr *)&client_addr, (socklen_t *)&client_addrlen);
-        if (sockn < 0) {
-            perror("ether (getsockname)");
+        request_ctx_t ctx;
+        extract_context(&ctx, newsockfd, &client_addr, &client_addrlen);
+
+        if (ctx.error != 0) {
+            // printf("error in ctx return\n");
             continue;
         }
 
-        // read from socket
-        int valread = read(newsockfd, buffer, BUFSIZE);
-        if (valread < 0) {
-            perror("ether (read)");
-            continue;
-        }
-
-        // Read the request
-        char method[BUFSIZE], uri[BUFSIZE], version[BUFSIZE];
-        sscanf(buffer, "%s %s %s", method, uri, version);
-        if (!strcmp(uri, "/")) {
-            strcpy(uri, "/main.html");
-        }
         char reqdata[1024];
         // sprintf(reqdata, "[%s:%u] %s %s %s\n", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port), method, version, uri);
-        sprintf(reqdata, "%s | %s | %s\n", inet_ntoa(client_addr.sin_addr), method, uri);
+        sprintf(reqdata, "%s | %s | %s\n", ctx.request_ip, ctx.method, ctx.uri);
         // write to socket
         // printf("calling generateResp\n");
         char* _resp = malloc(8192 * sizeof(char));
-        int status = generateResp(_resp, uri, method);
+        int status = generateResp(_resp, ctx.uri, ctx.method);
         // printf("writing resp\n");
         int valwrite = write(newsockfd, _resp, strlen(_resp));
         if (valwrite < 0) {
@@ -130,11 +118,47 @@ int run_ether_server(ether_config_t config) {
         diff = gmtime(&now.tv_sec)->tm_sec - gmtime(&starttime.tv_sec)->tm_sec;
         // diff += now.tv_nsec - starttime.tv_nsec;
         char ftime[80];
-        sprintf(&ftime, "%d.%09lds", diff, now.tv_nsec-starttime.tv_nsec);
+        sprintf(ftime, "%d.%09lds", diff, now.tv_nsec-starttime.tv_nsec);
         handledreq(status, reqdata, ftime);
         
         free(_resp);
         close(newsockfd);
     }
     return 0;
+}
+
+
+void extract_context(request_ctx_t* ctx, int newsockfd, struct sockaddr_in* client_addr, int* client_addrlen) {
+    // printf("Called\n");
+    char buffer[BUFSIZE];
+
+    // get client details
+    int sockn = getsockname(newsockfd, (struct sockaddr *)client_addr, (socklen_t *)client_addrlen);
+    if (sockn < 0) {
+        perror("ether (getsockname)");
+        ctx->error = 1;
+        return;
+    }
+    // printf("Got client details.\n");
+
+    // read from socket
+    int valread = read(newsockfd, buffer, BUFSIZE);
+    if (valread < 0) {
+        perror("ether (read)");
+        ctx->error = 1;
+        return;
+    }
+
+    // printf("Read from socket\n");
+
+    // Read the request
+    // char method[BUFSIZE], uri[BUFSIZE], version[BUFSIZE];
+    sscanf(buffer, "%s %s %s", ctx->method, ctx->uri, ctx->version);
+    if (!strcmp(ctx->uri, "/")) {
+        strcpy(ctx->uri, "/main.html");
+    }
+
+    // printf("Read request\n");
+
+    sprintf(ctx->request_ip, "%s", inet_ntoa((*client_addr).sin_addr));
 }
