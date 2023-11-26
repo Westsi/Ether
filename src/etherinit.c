@@ -124,15 +124,11 @@ int run_ether_server(ether_config_t config) {
 
         // call handler function
 
-        char sought_hashkey[1024];
-        strcpy(sought_hashkey, ctx.method);
-        strcat(sought_hashkey, ctx.uri);
-
-        printf("%s\n", sought_hashkey);
+        handler_t item = {.route = {.hashkey = ""}};
+        strcpy(item.route.hashkey, ctx.method);
+        strcat(item.route.hashkey, ctx.uri);
 
         handler_t* handler_func;
-        handler_t item = {.route = {.hashkey = ""}};
-        strcpy(item.route.hashkey, sought_hashkey);
         handler_func = hashmap_get(config.handlers, &item);
 
         if (handler_func != NULL) {
@@ -147,8 +143,11 @@ int run_ether_server(ether_config_t config) {
         sprintf(reqdata, "%s | %s | %s\n", ctx.request_ip, ctx.method, ctx.uri);
         // write to socket
         // printf("calling generateResp\n");
-        char* _resp = malloc(8192 * sizeof(char));
+        // char* _resp = malloc(8192 * sizeof(char));
+        char* _resp = malloc(8388608 * sizeof(char));
+        printf("CALLING generateResp wish me luck\n");
         int status = generateResp(_resp, ctx.uri, ctx.method);
+        printf("YAY I MADE IT TO AFTER GENERATERESP RETURNED!\n");
         // printf("writing resp\n");
         int valwrite = write(newsockfd, _resp, strlen(_resp));
         if (valwrite < 0) {

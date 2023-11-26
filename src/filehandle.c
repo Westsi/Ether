@@ -25,7 +25,7 @@ int readall(char path[], char* buffer) {
     
     /* reset the file position indicator to 
     the beginning of the file */
-    fseek(infile, 0L, SEEK_SET);	
+    fseek(infile, 0L, SEEK_SET);
     
     /* grab sufficient memory for the 
     buffer to hold the text */
@@ -34,10 +34,15 @@ int readall(char path[], char* buffer) {
     /* memory error */
     if(buffer == NULL)
         return 500;
-    
+    printf("last known communication.\n");
     /* copy all the text into the buffer */
     fread(buffer, sizeof(char), numbytes, infile);
+    printf("fread worked\n");
+    // when testing with audio file, it makes it to here then segfaults IF a different file has been loaded before.
+    // otherwise, it gives Fatal error: glibc detected an invalid stdio handle before fread.
+    // wtf
     fclose(infile);
+    printf("fclose returned\n");
     
     /* confirm we have read the file by
     outputing it to the console */
@@ -57,6 +62,7 @@ mime_map mime_types [] = {
     {"js", "application/javascript"},
     {"pdf", "application/pdf"},
     {"mp4", "video/mp4"},
+    {"mp3", "audio/mpeg"},
     {"png", "image/png"},
     {"svg", "image/svg+xml"},
     {"xml", "text/xml"},
