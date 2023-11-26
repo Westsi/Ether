@@ -137,15 +137,15 @@ int run_ether_server(ether_config_t config) {
             handler_func->func(&ctx);
         } else {
             printf("handler_func was NULL. Func not called.\n");
-
-            // this chunk segfaults for some reason
             size_t iter = 0;
             void *item;
             while (hashmap_iter(config.handlers, &iter, &item)) {
                 const handler_t *h = item;
-                printf("%d\n", strcmp(*h->route.hashkey, hashkey));
+                // WTF STRCMP SAYS 0 SO IT MATCHES. IS HASHMAP IMPL WRONG?!?!?!
+                char handlerhashkey[1024];
+                strcpy(handlerhashkey, h->route.hashkey);
+                printf("%d\n", strcmp(handlerhashkey, hashkey));
             }
-            //
         }
 
         char reqdata[1024];
