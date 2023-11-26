@@ -6,6 +6,26 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <stdint.h>
+#include <stddef.h>
+#include <stdbool.h>
+
+int handler_compare(const void* a, const void* b, void* hdata) {
+    const handler_t* ha = a;
+    const handler_t* hb = b;
+    return strcmp(ha->route.hashkey, hb->route.hashkey);
+}
+
+bool handler_iter(const void* item, void* hdata) {
+    const handler_t* handler = item;
+    printf("Method: %s Route: %s Function: %p Hashkey: %s", handler->route.method, handler->route.uri, (void*) handler->func, handler->route.hashkey);
+    return true;
+}
+
+uint64_t handler_hash(const void* item, uint64_t seed0, uint64_t seed1) {
+    const handler_t* handler = item;
+    return hashmap_sip(handler->route.hashkey, strlen(handler->route.hashkey), seed0, seed1);
+}
 
 ether_config_t init_ether_server() {
     ether_config_t config;
@@ -25,6 +45,8 @@ ether_config_t init_ether_server() {
     config.sockfd = sockfd;
     config.host_addr = host_addr;
     config.host_addrlen = host_addrlen;
+
+    config.handlers = hashmap_new(sizeof(handler_t), 0, 0, 0, handler_hash, handler_compare, NULL, NULL);
     return config;
 }
 
@@ -76,6 +98,9 @@ int run_ether_server(ether_config_t config) {
     }
     printf("listening for connections...\n");
 
+    hashmap_scan(config.handlers, handler_iter, NULL);
+    printf("\n");
+
     for (;;) {
         // accept incoming connections
         int newsockfd = accept(config.sockfd, (struct sockaddr *)&config.host_addr, (socklen_t *)&config.host_addrlen);
@@ -93,8 +118,25 @@ int run_ether_server(ether_config_t config) {
         extract_context(&ctx, newsockfd, &client_addr, &client_addrlen);
 
         if (ctx.error != 0) {
-            // printf("error in ctx return\n");
+            printf("[ETHER] \033[1;37;41m Unable to handle request. See above.\033[0m\n");
             continue;
+        }
+
+        // call handler function
+
+        char hashkey[1024];
+        strcpy(hashkey, ctx.method);
+        strcat(hashkey, ctx.uri);
+
+        printf("%s\n", hashkey);
+
+        handler_t* handler_func;
+        handler_func = hashmap_get(config.handlers, &(handler_t){.route={.hashkey=hashkey}});
+
+        if (handler_func != NULL) {
+            handler_func->func(&ctx);
+        } else {
+            printf("handler_func was NULL. Func not called.\n");
         }
 
         char reqdata[1024];
