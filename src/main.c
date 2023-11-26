@@ -18,6 +18,7 @@ void handle_req(request_ctx_t* test) {
 
 
 int main(void) { 
+    // see for mp3: https://stackoverflow.com/questions/30582473/send-mp3-file-over-socket-in-c
     ether_config_t config = init_ether_server();
 
     hashmap_set(config.handlers, &(handler_t){.func=handle_req, .route={.method="GET", .uri="/main.html", .hashkey="GET/main.html"}});

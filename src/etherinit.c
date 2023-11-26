@@ -55,8 +55,7 @@ ether_config_t init_ether_server() {
 char basepath[] = "./serve/";
 
 int generateResp(char* respbuf, char uri[], char method[]) {
-    // atm, assuming that all calls are get calls 
-    // printf("Called generateResp\n");
+    // atm, assuming that all calls are get calls
     char ibp[strlen(basepath)+strlen(uri)-1]; strcpy(ibp, basepath);
 
     char* fbuf = malloc(BUFLEN * sizeof(char));
