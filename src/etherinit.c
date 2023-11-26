@@ -137,6 +137,15 @@ int run_ether_server(ether_config_t config) {
             handler_func->func(&ctx);
         } else {
             printf("handler_func was NULL. Func not called.\n");
+
+            // this chunk segfaults for some reason
+            size_t iter = 0;
+            void *item;
+            while (hashmap_iter(config.handlers, &iter, &item)) {
+                const handler_t *h = item;
+                printf("%d\n", strcmp(*h->route.hashkey, hashkey));
+            }
+            //
         }
 
         char reqdata[1024];
