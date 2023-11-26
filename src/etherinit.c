@@ -124,28 +124,23 @@ int run_ether_server(ether_config_t config) {
 
         // call handler function
 
-        char hashkey[1024];
-        strcpy(hashkey, ctx.method);
-        strcat(hashkey, ctx.uri);
+        char sought_hashkey[1024];
+        strcpy(sought_hashkey, ctx.method);
+        strcat(sought_hashkey, ctx.uri);
 
-        printf("%s\n", hashkey);
+        printf("%s\n", sought_hashkey);
 
         handler_t* handler_func;
-        handler_func = hashmap_get(config.handlers, &(handler_t){.route={.hashkey=hashkey}});
+        handler_t item = {.route = {.hashkey = ""}};
+        strcpy(item.route.hashkey, sought_hashkey);
+        // passing in string as below works, variable doesn't. Why?
+        handler_func = hashmap_get(config.handlers, &item);
+        // &(handler_t){.route={.hashkey="GET/main.html"}}
 
         if (handler_func != NULL) {
             handler_func->func(&ctx);
         } else {
             printf("handler_func was NULL. Func not called.\n");
-            size_t iter = 0;
-            void *item;
-            while (hashmap_iter(config.handlers, &iter, &item)) {
-                const handler_t *h = item;
-                // WTF STRCMP SAYS 0 SO IT MATCHES. IS HASHMAP IMPL WRONG?!?!?!
-                char handlerhashkey[1024];
-                strcpy(handlerhashkey, h->route.hashkey);
-                printf("%d\n", strcmp(handlerhashkey, hashkey));
-            }
         }
 
         char reqdata[1024];
