@@ -11,6 +11,7 @@ typedef struct EtherRequestContext {
     char headers[1024][1024];
     char request_ip[1024];
     char version[64];
+    char response[8192];
 } request_ctx_t;
 
 typedef struct EtherRouteInfo {

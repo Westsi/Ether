@@ -133,13 +133,12 @@ int run_ether_server(ether_config_t config) {
         handler_t* handler_func;
         handler_t item = {.route = {.hashkey = ""}};
         strcpy(item.route.hashkey, sought_hashkey);
-        // passing in string as below works, variable doesn't. Why?
         handler_func = hashmap_get(config.handlers, &item);
-        // &(handler_t){.route={.hashkey="GET/main.html"}}
 
         if (handler_func != NULL) {
             handler_func->func(&ctx);
         } else {
+            // 404 Not Found
             printf("handler_func was NULL. Func not called.\n");
         }
 
