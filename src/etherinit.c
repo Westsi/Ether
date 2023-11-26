@@ -10,6 +10,8 @@
 #include <stddef.h>
 #include <stdbool.h>
 
+#define BUFLEN 8388608
+
 int handler_compare(const void* a, const void* b, void* hdata) {
     const handler_t* ha = a;
     const handler_t* hb = b;
@@ -57,8 +59,8 @@ int generateResp(char* respbuf, char uri[], char method[]) {
     // printf("Called generateResp\n");
     char ibp[strlen(basepath)+strlen(uri)-1]; strcpy(ibp, basepath);
 
-    char* fbuf = malloc(8192 * sizeof(char));
-    memset(fbuf, 0, 8192); // this seems to be necessary unfortunately
+    char* fbuf = malloc(BUFLEN * sizeof(char));
+    memset(fbuf, 0, BUFLEN); // this seems to be necessary unfortunately
     int status = readall(strcat(ibp, uri+1), fbuf);
     char conttype[20];
     getFiletype(conttype, uri);
@@ -143,11 +145,10 @@ int run_ether_server(ether_config_t config) {
         sprintf(reqdata, "%s | %s | %s\n", ctx.request_ip, ctx.method, ctx.uri);
         // write to socket
         // printf("calling generateResp\n");
-        // char* _resp = malloc(8192 * sizeof(char));
-        char* _resp = malloc(8388608 * sizeof(char));
-        printf("CALLING generateResp wish me luck\n");
+        char* _resp = malloc(BUFLEN * sizeof(char));
+        // printf("CALLING generateResp wish me luck\n");
         int status = generateResp(_resp, ctx.uri, ctx.method);
-        printf("YAY I MADE IT TO AFTER GENERATERESP RETURNED!\n");
+        // printf("YAY I MADE IT TO AFTER GENERATERESP RETURNED!\n");
         // printf("writing resp\n");
         int valwrite = write(newsockfd, _resp, strlen(_resp));
         if (valwrite < 0) {

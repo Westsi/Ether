@@ -34,19 +34,16 @@ int readall(char path[], char* buffer) {
     /* memory error */
     if(buffer == NULL)
         return 500;
-    printf("last known communication.\n");
+    // printf("last known communication.\n");
     /* copy all the text into the buffer */
     fread(buffer, sizeof(char), numbytes, infile);
-    printf("fread worked\n");
-    // when testing with audio file, it makes it to here then segfaults IF a different file has been loaded before.
-    // otherwise, it gives Fatal error: glibc detected an invalid stdio handle before fread.
-    // wtf
+    // printf("fread worked\n");
     fclose(infile);
-    printf("fclose returned\n");
+    // printf("fclose returned\n");
     
     /* confirm we have read the file by
     outputing it to the console */
-    // printf("The file contains this text\n\n%s", buffer);
+    printf("The file contains this text\n\n%s", buffer);
     
     return 200;
 }
